@@ -77,7 +77,10 @@ jobs:
 
       - name: "Start services"
         run: docker compose up -d --wait
-          
+           
+      - name: "Create database"
+        run: symfony console doctrine:database:create --if-not-exist --env test --ansi --no-interaction
+        
       - name: "Updating schema"
         if: ${{ inputs.database-init == 'schema' }}
         run: |
