@@ -97,7 +97,7 @@ jobs:
           symfony console doctrine:fixtures:load --force --env test --ansi --no-interaction
 
       - name: "Run PHPUnit"
-        run: symfony php vendor/bin/phpunit --coverage-cobertura ./var/cobertura.xml --log-junit ./var/junit.xml 
+        run: symfony php vendor/bin/phpunit --coverage-text=./var/coverage.txt --log-junit ./var/junit.xml 
         continue-on-error: true
 
       - name: Generate PHPUnit Test Results
@@ -109,23 +109,11 @@ jobs:
           fail_on_failure: true
           require_tests: true
 
-
-      - name: Code Coverage Report
-        id: coverage-results
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: ./var/cobertura.xml
-          badge: true
-          fail_below_min: false
-          format: markdown
-          hide_branch_rate: false
-          indicators: true
-          output: both
-          thresholds: '60 80'
-
       - name: Prepare summary
         if: always() 
         run: |
+          echo "" > $GITHUB_STEP_SUMMARY
+
           JOB_SUMMARY="job-summary.md"
           echo "# Job Summary" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
@@ -134,21 +122,15 @@ jobs:
           else 
             STATUS="success"
             TEXT="${{ steps.test-results.outputs.passed}}%20passed"
-            if [ "${{ steps.test-results.outputs.failed }}" -neq "0" ]; then
+            if [ "${{ steps.test-results.outputs.failed }}" -ne "0" ]; then
               STATUS="critical"
               TEXT="$TEXT,%20${{steps.test-results.outputs.failed}}"
-            elif [ "${{ steps.test-results.outputs.skipped }}" -neq "0"]; then
+            elif [ "${{ steps.test-results.outputs.skipped }}" -ne "0"]; then
               STATUS="yellow"
               TEXT="$TEXT,%20${{steps.test-results.outputs.skipped}}"
             fi
 
             echo "!()[https://img.shields.io/badge/tests-$TEXT-$STATUS]" >> $JOB_SUMMARY
-          fi
-
-          if ${{steps.coverage-results.outcome == 'skipped' || steps.coverage-results.outcome == 'cancelled' }} ; then
-            echo "!()[https://img.shields.io/badge/Code%20Coverage-Unknown-lightgrey]" >> $JOB_SUMMARY
-          else
-            cat code-coverage-results.md | head -n 1 >> $JOB_SUMMARY
           fi
 
           echo "" >> $JOB_SUMMARY
@@ -160,11 +142,11 @@ jobs:
           echo "passed | ${{ steps.test-results.outputs.passed }}" >> $JOB_SUMMARY
           echo "failed | ${{ steps.test-results.outputs.failed }}" >> $JOB_SUMMARY
           echo "skipped | ${{ steps.test-results.outputs.skipped }}" >> $JOB_SUMMARY
-          echo "" > $JOB_SUMMARY
+          echo "" >> $JOB_SUMMARY
           echo "## CodeCoverage" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
-          sed '1d' code-coverage-results.md >> $JOB_SUMMARY
-          echo $JOB_SUMMARY >> $GITHUB_STEP_SUMMARY
+          sed '1d' var/coverage.txt >> $JOB_SUMMARY
+          cat $JOB_SUMMARY > $GITHUB_STEP_SUMMARY
 
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
