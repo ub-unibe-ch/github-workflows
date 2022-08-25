@@ -146,7 +146,7 @@ jobs:
           echo "" >> $JOB_SUMMARY
           echo "## CodeCoverage" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
-          sed '5,11!d' ./var/coverage.txt >> $JOB_SUMMARY
+          sed '5,10!d' ./var/coverage.txt >> $JOB_SUMMARY
           cat $JOB_SUMMARY > $GITHUB_STEP_SUMMARY
 
       - name: Add Coverage PR Comment
