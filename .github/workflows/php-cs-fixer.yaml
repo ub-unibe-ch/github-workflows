@@ -7,6 +7,10 @@ on:
         type: string
         required: false
         default: "8.1"
+      php-extensions:
+        type: string
+        required: false
+        default: "intl, json, zip"
     secrets:
       packagist-token:
         required: true
@@ -25,8 +29,8 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: "none"
-          php-version: "8.1"
-          extensions: ctype, gd, iconv, imagick, json, pcntl, zip, mariadb
+          php-version: ${{ inputs.php-version }}
+          extensions: ${{ inputs.php-extensions }}
         env:
           COMPOSER_TOKEN: ${{ secrets.packagist-token }}
 
@@ -45,6 +49,6 @@ jobs:
         run: composer install --ansi --no-interaction --no-progress --prefer-dist
 
       - name: "Run php-cs-fixer"
-        run: composer php-cs-fix
+        run: symfony php vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
 
 

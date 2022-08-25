@@ -1,0 +1,178 @@
+name: Reusable phpunit 
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        type: string
+        required: false
+        default: "8.1"
+      php-extensions:
+        type: string
+        required: false
+        default: "intl, json, zip"
+      database-init:
+        type: string
+        required: false
+        default: "schema"
+      database-load-fixtures:
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      packagist-token:
+        required: true
+      node-token:
+        required: false
+
+jobs:
+  test:
+    name: "phpunit"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@verbose"
+        with:
+          coverage: "pcov"
+          php-version: ${{ inputs.php-version }}
+          extensions: ${{ inputs.php-extensions }}
+        env:
+          COMPOSER_TOKEN: ${{ secrets.packagist-token }}
+
+      - name: "Install symfony-cli"
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+          sudo apt install symfony-cli -y
+
+      - name: Get composer cache directory
+        id: composerCache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composerCache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Configure NPM
+        run: |
+          if [ -n "${{ secrets.node-token}}" ]; then
+            echo '//npm.pkg.github.com/:_authToken=${{ secrets.node-token }}' > .npmrc
+            echo '@ub-unibe-ch:registry=https://npm.pkg.github.com/' >> .npmrc
+            echo 'always-auth=true' >> .npmrc
+          fi 
+
+      - name: "Install latest dependencies"
+        run: |
+          composer install --ansi --no-interaction --no-progress --prefer-dist
+          yarn --no-interaction --no-progress
+      
+      - name: "Build assets"
+        run: yarn encore production --color
+
+      - name: "Start services"
+        run: docker compose up -d --wait
+           
+      - name: "Create database"
+        run: symfony console doctrine:database:create --if-not-exists --env test --ansi --no-interaction
+        
+      - name: "Updating schema"
+        if: ${{ inputs.database-init == 'schema' }}
+        run: |
+          symfony console doctrine:schema:update --force --env test --ansi --no-interaction
+    
+      - name: "Run database migration"
+        if: ${{ inputs.database-init == 'migration' }} 
+        run: |
+          symfony console doctrine:migrations:migrate --env test -n --ansi --no-interaction
+
+      - name: "Load fixtures"
+        if: ${{ inputs.database-load-fixtures == true }} 
+        run: |
+          symfony console doctrine:fixtures:load --force --env test --ansi --no-interaction
+
+      - name: "Run PHPUnit"
+        run: symfony php vendor/bin/phpunit --coverage-cobertura ./var/cobertura.xml --log-junit ./var/junit.xml 
+        continue-on-error: true
+
+      - name: Generate PHPUnit Test Results
+        id: test-results
+        uses: mikepenz/action-junit-report@v3
+        with:
+          report_paths: "./var/junit.xml"
+          check_name: "PHPUnit Test Report"
+          fail_on_failure: true
+          require_tests: true
+
+
+      - name: Code Coverage Report
+        id: coverage-results
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./var/cobertura.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Prepare summary
+        if: always() 
+        run: |
+          JOB_SUMMARY="job-summary.md"
+          echo "# Job Summary" >> $JOB_SUMMARY
+          echo "" >> $JOB_SUMMARY
+          if ${{steps.test-results.outcome == 'skipped' || steps.test-results.outcome == 'cancelled' }} ; then
+            echo "!()[https://img.shields.io/badge/Tests-Unknown-lightgrey]" >> $JOB_SUMMARY
+          else 
+            STATUS="success"
+            TEXT="${{ step.test-results.outputs.passed}}%20passed"
+            if [ "${{ step.test-results.outputs.failed }}" -neq "0" ]; then
+              STATUS="critical"
+              TEXT="$TEXT,%20${{step.test-results.outputs.failed}}"
+            elif [ "${{ step.test-results.outputs.skipped }}" -neq "0"]; then
+              STATUS="yellow"
+              TEXT="$TEXT,%20${{step.test-results.outputs.skipped}}"
+            fi
+
+            echo "!()[https://img.shields.io/badge/tests-$TEXT-$STATUS]" >> $JOB_SUMMARY
+          fi
+
+          if ${{steps.coverage-results.outcome == 'skipped' || steps.coverage-results.outcome == 'cancelled' }} ; then
+            echo "!()[https://img.shields.io/badge/Code%20Coverage-Unknown-lightgrey]" >> $JOB_SUMMARY
+          else
+            cat code-coverage-results.md | head -n 1 >> $JOB_SUMMARY
+          fi
+
+          echo "" >> $JOB_SUMMARY
+          echo "## Tests" >> $JOB_SUMMARY
+          echo "" >> $JOB_SUMMARY
+          echo "State | Number " >> $JOB_SUMMARY
+          echo "--- | ---" >> $JOB_SUMMARY
+          echo "total | ${{ step.test-results.outputs.total }}" >> $JOB_SUMMARY
+          echo "passed | ${{ step.test-results.outputs.passed }}" >> $JOB_SUMMARY
+          echo "failed | ${{ step.test-results.outputs.failed }}" >> $JOB_SUMMARY
+          echo "skipped | ${{ step.test-results.outputs.skipped }}" >> $JOB_SUMMARY
+          echo "" > $JOB_SUMMARY
+          echo "## CodeCoverage" >> $JOB_SUMMARY
+          echo "" >> $JOB_SUMMARY
+          sed '1d' code-coverage-results.md >> $JOB_SUMMARY
+          echo $JOB_SUMMARY >> $GITHUB_STEP_SUMMARY
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        with:
+         recreate: true
+         path: job-summary.md
+
+      - name: "Cleanup"
+        if: ${{ always() }}
+        run: docker-compose down
