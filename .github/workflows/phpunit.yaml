@@ -108,6 +108,7 @@ jobs:
           check_name: "PHPUnit Test Report"
           fail_on_failure: true
           require_tests: true
+          job_summary: false
 
       - name: Prepare summary
         if: always() 
