@@ -118,7 +118,7 @@ jobs:
           echo "# Job Summary" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
           if ${{steps.test-results.outcome == 'skipped' || steps.test-results.outcome == 'cancelled' }} ; then
-            echo "!()[https://img.shields.io/badge/Tests-Unknown-lightgrey]" >> $JOB_SUMMARY
+            echo "![](https://img.shields.io/badge/Tests-Unknown-lightgrey)" >> $JOB_SUMMARY
           else 
             STATUS="success"
             TEXT="${{ steps.test-results.outputs.passed}}%20passed"
@@ -130,7 +130,7 @@ jobs:
               TEXT="$TEXT,%20${{steps.test-results.outputs.skipped}}"
             fi
 
-            echo "!()[https://img.shields.io/badge/tests-$TEXT-$STATUS]" >> $JOB_SUMMARY
+            echo "![](https://img.shields.io/badge/tests-$TEXT-$STATUS)" >> $JOB_SUMMARY
           fi
 
           echo "" >> $JOB_SUMMARY
@@ -145,7 +145,7 @@ jobs:
           echo "" >> $JOB_SUMMARY
           echo "## CodeCoverage" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
-          sed '1d' var/coverage.txt >> $JOB_SUMMARY
+          sed '5,11!d' coverage.txt >> $JOB_SUMMARY
           cat $JOB_SUMMARY > $GITHUB_STEP_SUMMARY
 
       - name: Add Coverage PR Comment
