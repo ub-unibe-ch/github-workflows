@@ -49,6 +49,6 @@ jobs:
         run: composer install --ansi --no-interaction --no-progress --prefer-dist
 
       - name: "Run php-cs-fixer"
-        run: symfony php vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
+        run: php vendor/bin/php-cs-fixer fix -v --dry-run --stop-on-violation --using-cache=no
 
 
