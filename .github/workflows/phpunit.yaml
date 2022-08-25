@@ -133,13 +133,13 @@ jobs:
             echo "!()[https://img.shields.io/badge/Tests-Unknown-lightgrey]" >> $JOB_SUMMARY
           else 
             STATUS="success"
-            TEXT="${{ step.test-results.outputs.passed}}%20passed"
-            if [ "${{ step.test-results.outputs.failed }}" -neq "0" ]; then
+            TEXT="${{ steps.test-results.outputs.passed}}%20passed"
+            if [ "${{ steps.test-results.outputs.failed }}" -neq "0" ]; then
               STATUS="critical"
-              TEXT="$TEXT,%20${{step.test-results.outputs.failed}}"
-            elif [ "${{ step.test-results.outputs.skipped }}" -neq "0"]; then
+              TEXT="$TEXT,%20${{steps.test-results.outputs.failed}}"
+            elif [ "${{ steps.test-results.outputs.skipped }}" -neq "0"]; then
               STATUS="yellow"
-              TEXT="$TEXT,%20${{step.test-results.outputs.skipped}}"
+              TEXT="$TEXT,%20${{steps.test-results.outputs.skipped}}"
             fi
 
             echo "!()[https://img.shields.io/badge/tests-$TEXT-$STATUS]" >> $JOB_SUMMARY
@@ -156,10 +156,10 @@ jobs:
           echo "" >> $JOB_SUMMARY
           echo "State | Number " >> $JOB_SUMMARY
           echo "--- | ---" >> $JOB_SUMMARY
-          echo "total | ${{ step.test-results.outputs.total }}" >> $JOB_SUMMARY
-          echo "passed | ${{ step.test-results.outputs.passed }}" >> $JOB_SUMMARY
-          echo "failed | ${{ step.test-results.outputs.failed }}" >> $JOB_SUMMARY
-          echo "skipped | ${{ step.test-results.outputs.skipped }}" >> $JOB_SUMMARY
+          echo "total | ${{ steps.test-results.outputs.total }}" >> $JOB_SUMMARY
+          echo "passed | ${{ steps.test-results.outputs.passed }}" >> $JOB_SUMMARY
+          echo "failed | ${{ steps.test-results.outputs.failed }}" >> $JOB_SUMMARY
+          echo "skipped | ${{ steps.test-results.outputs.skipped }}" >> $JOB_SUMMARY
           echo "" > $JOB_SUMMARY
           echo "## CodeCoverage" >> $JOB_SUMMARY
           echo "" >> $JOB_SUMMARY
