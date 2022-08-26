@@ -123,12 +123,13 @@ jobs:
           else 
             STATUS="success"
             TEXT="${{ steps.test-results.outputs.passed}}%20passed"
+            if [ "${{ steps.test-results.outputs.skipped }}" -ne "0"]; then
+              STATUS="yellow"
+              TEXT="$TEXT,%20${{steps.test-results.outputs.skipped}}%20skipped"
+            fi
             if [ "${{ steps.test-results.outputs.failed }}" -ne "0" ]; then
               STATUS="critical"
-              TEXT="$TEXT,%20${{steps.test-results.outputs.failed}}"
-            elif [ "${{ steps.test-results.outputs.skipped }}" -ne "0"]; then
-              STATUS="yellow"
-              TEXT="$TEXT,%20${{steps.test-results.outputs.skipped}}"
+              TEXT="$TEXT,%20${{steps.test-results.outputs.failed}}%20failed"
             fi
 
             echo "![](https://img.shields.io/badge/tests-$TEXT-$STATUS)" >> $JOB_SUMMARY
