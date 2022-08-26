@@ -70,7 +70,24 @@ In this example all valid parameters are listed with their default value. For be
 
 ## Contributing
 
-Simply change the corresponding workflow file and commit & push the changes. With the example above you'll see that other repositories will link to a tag. You can publish a commit to that tag with following commands:
+Simply change the corresponding workflow file and commit & push the changes. If you wan't to test the changes, you have to reference the workflow files by the branch name, like so:
+
+```yaml
+
+# ...
+jobs:
+  phpstan:
+    uses: ub-unibe-ch/github-workflows/.github/workflows/phpstan.yaml@main # <-- here
+  
+# ...
+  php-cs-fixer:
+    uses: ub-unibe-ch/github-workflows/.github/workflows/php-cs-fixer.yaml@main # <-- here
+# ...  
+  phpunit:
+    uses: ub-unibe-ch/github-workflows/.github/workflows/phpunit.yaml@main # <-- here
+```
+
+When you are finished with your changes, you have to move the git tag to the new commit:
 
 ```
 git push origin :refs/tags/<tagname>
