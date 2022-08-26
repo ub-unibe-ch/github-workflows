@@ -20,7 +20,7 @@ Currently there these workflows which can be reused:
 
 * phpstan
 * php-cs-fixer
-* test
+* phpunit
 
 Following lists an example GitHub action which calls these workflows:
 
@@ -37,10 +37,9 @@ on:
       - master
       - main
 
-
 jobs:
   phpstan:
-    uses: ub-unibe-ch/github-workflows/.github/workflows/phpstan.yaml@main
+    uses: ub-unibe-ch/github-workflows/.github/workflows/phpstan.yaml@v1
     with: 
       php-version: "8.1"
       php-extensions: "intl, json, zip"
@@ -48,7 +47,7 @@ jobs:
       packagist-token: ${{ secrets.PACKAGIST_TOKEN }}
 
   php-cs-fixer:
-    uses: ub-unibe-ch/github-workflows/.github/workflows/php-cs-fixer.yaml@main
+    uses: ub-unibe-ch/github-workflows/.github/workflows/php-cs-fixer.yaml@v1
     with: 
       php-version: "8.1"
       php-extensions: "intl, json, zip"
@@ -57,27 +56,28 @@ jobs:
 
   phpunit:
     needs: [ "phpstan", "php-cs-fixer" ]
-    uses: ub-unibe-ch/github-workflows/.github/workflows/phpunit.yaml@main
+    uses: ub-unibe-ch/github-workflows/.github/workflows/phpunit.yaml@v1
     with: 
       php-version: "8.1"
       php-extensions: "intl, json, zip"
-      database-init: "schema"
+      database-init: "schema" # possible values are "schema" and "migration"
       database-load-fixtures: false
     secrets:
       packagist-token: ${{ secrets.PACKAGIST_TOKEN }}
-
 ```
 
 In this example all valid parameters are listed with their default value. For better explanation, look into the corresponding workflow file.
 
-### phpstan
+## Contributing
 
-# Contributing
+Simply change the corresponding workflow file and commit & push the changes. With the example above you'll see that other repositories will link to a tag. You can publish a commit to that tag with following commands:
 
-!!! info
-    What you have to do to if you want to extend the code
+```
+git push origin :refs/tags/<tagname>
+git tag -fa <tagname>
+git push --tags
+```
 
-# References
+## References
 
-!!! info
-    Useful links
+* [Reusing Workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
