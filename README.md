@@ -60,8 +60,9 @@ jobs:
     with: 
       php-version: "8.1"
       php-extensions: "intl, json, zip"
-      database-init: "schema" # possible values are "schema" and "migration"
+      database-init: "schema" # possible values are "schema", "migration" and "none"
       database-load-fixtures: false
+      services-start: true
     secrets:
       packagist-token: ${{ secrets.PACKAGIST_TOKEN }}
 ```

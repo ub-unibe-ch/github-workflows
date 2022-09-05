@@ -19,6 +19,10 @@ on:
         type: boolean
         required: false
         default: false
+      start-services:
+        type: boolean
+        required: false
+        default: true
     secrets:
       packagist-token:
         required: true
@@ -76,9 +80,11 @@ jobs:
         run: yarn encore production --color
 
       - name: "Start services"
+        if: ${{ inputs.start-services }}
         run: docker compose up -d --wait
            
       - name: "Create database"
+        if: ${{ inputs.database-init != 'none' }}
         run: symfony console doctrine:database:create --if-not-exists --env test --ansi --no-interaction
         
       - name: "Updating schema"
@@ -158,5 +164,5 @@ jobs:
          path: job-summary.md
 
       - name: "Cleanup"
-        if: ${{ always() }}
+        if: ${{ always() && inputs.start-services }}
         run: docker-compose down
