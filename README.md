@@ -62,7 +62,7 @@ jobs:
       php-extensions: "intl, json, zip"
       database-init: "schema" # possible values are "schema", "migration" and "none"
       database-load-fixtures: false
-      services-start: true
+      start-services: true
     secrets:
       packagist-token: ${{ secrets.PACKAGIST_TOKEN }}
 ```
