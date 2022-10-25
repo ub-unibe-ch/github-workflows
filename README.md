@@ -65,9 +65,12 @@ jobs:
       start-services: true
     secrets:
       packagist-token: ${{ secrets.PACKAGIST_TOKEN }}
+      node-token: ${{ secrets.NODE_AUTH_TOKEN }}
 ```
 
 In this example all valid parameters are listed with their default value. For better explanation, look into the corresponding workflow file.
+
+Please note that for phpunit, the `node-token` is used to download the npm packages from the ub-unibe-ch repository, while the `packagist-token` is used to download the composer packages.
 
 ## Contributing
 
