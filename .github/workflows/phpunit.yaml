@@ -49,8 +49,7 @@ jobs:
 
       - name: "Install symfony-cli"
         run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
-          sudo apt install symfony-cli -y
+          curl -sS https://get.symfony.com/cli/installer | bash
 
       - name: Get composer cache directory
         id: composerCache
