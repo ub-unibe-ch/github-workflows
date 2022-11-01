@@ -50,6 +50,7 @@ jobs:
       - name: "Install symfony-cli"
         run: |
           curl -sS https://get.symfony.com/cli/installer | bash
+          mv $HOME/.symfony5/bin/symfony /usr/local/bin/symfony
 
       - name: Get composer cache directory
         id: composerCache
