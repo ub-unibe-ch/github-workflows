@@ -146,6 +146,17 @@ class ControllerTest extends PantherTestCase
 
 You probably want to save this snippet as abstract class in your project somewhere to instantiate the panther client.
 
+Also ensure that in the `config/packages/doctrine.yaml` the panther environment also gets the `_test` suffix:
+
+```yaml
+
+when@panther:
+    doctrine:
+        dbal:
+            # "TEST_TOKEN" is typically set by ParaTest
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+```
+
 ## Contributing
 
 Simply change the corresponding workflow file and commit & push the changes. If you want to test the changes, you have to reference the workflow files by the branch name, like so:
