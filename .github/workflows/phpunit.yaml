@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v3"
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@verbose"
@@ -54,10 +54,10 @@ jobs:
 
       - name: Get composer cache directory
         id: composerCache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.composerCache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
@@ -89,18 +89,15 @@ jobs:
         
       - name: "Updating schema"
         if: ${{ inputs.database-init == 'schema' }}
-        run: |
-          symfony console doctrine:schema:update --force --env test --ansi --no-interaction
+        run: symfony console doctrine:schema:update --force --env test --ansi --no-interaction
     
       - name: "Run database migration"
         if: ${{ inputs.database-init == 'migration' }} 
-        run: |
-          symfony console doctrine:migrations:migrate --env test -n --ansi --no-interaction
+        run: symfony console doctrine:migrations:migrate --env test -n --ansi --no-interaction
 
       - name: "Load fixtures"
         if: ${{ inputs.database-load-fixtures == true }} 
-        run: |
-          symfony console doctrine:fixtures:load --force --env test --ansi --no-interaction
+        run: symfony console doctrine:fixtures:load --force --env test --ansi --no-interaction
 
       - name: "Run PHPUnit"
         run: symfony php vendor/bin/phpunit --coverage-text=./var/coverage.txt --log-junit ./var/junit.xml 
